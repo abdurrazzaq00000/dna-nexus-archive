@@ -1,26 +1,71 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import MainLayout from "@/components/layout/MainLayout";
+
+// Auth Pages
+import Login from "@/pages/Login";
+import NotFound from "@/pages/NotFound";
+
+// Admin Pages
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+
+// Lab Pages
+import LabDashboard from "@/pages/lab/LabDashboard";
+
+// Manager Pages
+import ManagerDashboard from "@/pages/manager/ManagerDashboard";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Auth Routes */}
+              <Route path="/login" element={<Login />} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin" element={<MainLayout requiredRole="admin" />}>
+                <Route path="dashboard" element={<AdminDashboard />} />
+                {/* More admin routes will go here */}
+                <Route index element={<Navigate to="dashboard" replace />} />
+              </Route>
+              
+              {/* Lab Routes */}
+              <Route path="/lab" element={<MainLayout requiredRole="lab" />}>
+                <Route path="dashboard" element={<LabDashboard />} />
+                {/* More lab routes will go here */}
+                <Route index element={<Navigate to="dashboard" replace />} />
+              </Route>
+              
+              {/* Manager Routes */}
+              <Route path="/manager" element={<MainLayout requiredRole="manager" />}>
+                <Route path="dashboard" element={<ManagerDashboard />} />
+                {/* More manager routes will go here */}
+                <Route index element={<Navigate to="dashboard" replace />} />
+              </Route>
+              
+              {/* Default Route - Redirect to login */}
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              
+              {/* Catch All */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

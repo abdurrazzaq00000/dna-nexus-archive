@@ -1,14 +1,25 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const Index = () => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+  const { isAuthenticated, user } = useAuth();
+  
+  if (isAuthenticated && user) {
+    // Redirect to appropriate dashboard based on user role
+    switch(user.role) {
+      case 'admin':
+        return <Navigate to="/admin/dashboard" replace />;
+      case 'lab':
+        return <Navigate to="/lab/dashboard" replace />;
+      case 'manager':
+        return <Navigate to="/manager/dashboard" replace />;
+    }
+  }
+  
+  // If not authenticated, redirect to login
+  return <Navigate to="/login" replace />;
 };
 
 export default Index;
