@@ -12,7 +12,7 @@ export async function fetchSamples() {
     .order('created_at', { ascending: false });
   
   if (error) throw error;
-  return data;
+  return data as Sample[];
 }
 
 export async function fetchSampleById(id: string) {
@@ -26,7 +26,7 @@ export async function fetchSampleById(id: string) {
     .single();
   
   if (error) throw error;
-  return data;
+  return data as Sample & { sample_history: SampleHistory[] };
 }
 
 export async function fetchSamplesByStatus(status: SampleStatus) {
@@ -37,7 +37,7 @@ export async function fetchSamplesByStatus(status: SampleStatus) {
     .order('created_at', { ascending: false });
   
   if (error) throw error;
-  return data;
+  return data as Sample[];
 }
 
 export async function fetchSamplesByLab(labId: string) {
@@ -48,7 +48,7 @@ export async function fetchSamplesByLab(labId: string) {
     .order('created_at', { ascending: false });
   
   if (error) throw error;
-  return data;
+  return data as Sample[];
 }
 
 export async function createSample(sampleData: {
@@ -68,7 +68,7 @@ export async function createSample(sampleData: {
     .single();
   
   if (error) throw error;
-  return data;
+  return data as Sample;
 }
 
 export async function updateSampleStatus(sampleId: string, status: SampleStatus, note: string, updatedBy: string) {
@@ -95,7 +95,7 @@ export async function updateSampleStatus(sampleId: string, status: SampleStatus,
   
   if (historyError) throw historyError;
   
-  return data;
+  return data as SampleHistory[];
 }
 
 export async function getSampleStats(): Promise<SampleStats> {

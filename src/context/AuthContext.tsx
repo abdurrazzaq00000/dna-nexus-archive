@@ -1,6 +1,7 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { User, AuthContextType } from '../types/auth';
+import { User } from '../types/sample';
+import { AuthContextType } from '../types/auth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -26,6 +27,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 email: session.user.email || '',
                 role: userProfile.role,
                 name: userProfile.full_name || '',
+                active: true,
+                created_at: userProfile.created_at || new Date().toISOString()
               });
             } else {
               setUser(null);
@@ -47,6 +50,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: session.user.email || '',
               role: userProfile.role,
               name: userProfile.full_name || '',
+              active: true,
+              created_at: userProfile.created_at || new Date().toISOString()
             });
           }
           setIsLoading(false);
@@ -121,6 +126,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: data.user.email || '',
           role: userProfile.role,
           name: userProfile.full_name || '',
+          active: true,
+          created_at: userProfile.created_at || new Date().toISOString()
         });
         
         toast({

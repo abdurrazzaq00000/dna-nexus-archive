@@ -8,7 +8,7 @@ export interface Sample {
   sample_id: string;
   patient_name: string;
   age?: number | null;
-  gender?: string;
+  gender?: string | null;
   collected_by?: string | null;
   status: SampleStatus;
   created_at?: string | null;
@@ -32,7 +32,7 @@ export interface User {
   email: string;
   role: 'admin' | 'lab' | 'manager';
   active: boolean;
-  created_at: Date;
+  created_at: string;
 }
 
 export interface Lab {
@@ -42,7 +42,7 @@ export interface Lab {
   active: boolean;
   created_at: string;
   created_by?: string | null;
-  samplesCollected?: number; // Add this for mock data
+  samplesCollected?: number; // For tracking collected samples count
 }
 
 export interface SampleStats {
