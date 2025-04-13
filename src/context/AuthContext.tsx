@@ -2,82 +2,131 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User, AuthContextType } from '../types/auth';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 // Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Mock user data - In a real app, this would come from an API
-const MOCK_USERS = [
-  {
-    id: '1',
-    email: 'admin@dna-nexus.com',
-    password: 'admin123',
-    role: 'admin',
-    name: 'Admin User'
-  },
-  {
-    id: '2',
-    email: 'lab@dna-nexus.com',
-    password: 'lab123',
-    role: 'lab',
-    name: 'Lab Technician'
-  },
-  {
-    id: '3',
-    email: 'manager@dna-nexus.com',
-    password: 'manager123',
-    role: 'manager',
-    name: 'Sample Manager'
-  }
-];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check if the user is already logged in
+  // Initialize auth state from supabase
   useEffect(() => {
-    const storedUser = localStorage.getItem('dna_user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Failed to parse stored user', error);
-        localStorage.removeItem('dna_user');
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session && session.user) {
+          // Fetch user role and profile data
+          fetchUserProfile(session.user.id).then(userProfile => {
+            if (userProfile) {
+              setUser({
+                id: session.user.id,
+                email: session.user.email || '',
+                role: userProfile.role,
+                name: userProfile.full_name || '',
+              });
+            } else {
+              setUser(null);
+            }
+          });
+        } else {
+          setUser(null);
+        }
       }
-    }
-    setIsLoading(false);
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session && session.user) {
+        fetchUserProfile(session.user.id).then(userProfile => {
+          if (userProfile) {
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              role: userProfile.role,
+              name: userProfile.full_name || '',
+            });
+          }
+          setIsLoading(false);
+        });
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  // Mock login function - In a real app, this would make an API call
+  // Function to fetch user profile
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+  };
+
   const login = async (email: string, password: string, role: string) => {
     setIsLoading(true);
     
-    // In a real app, this would be an API call
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Sign in with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
-      const matchedUser = MOCK_USERS.find(
-        user => user.email === email && user.password === password && user.role === role
-      );
-      
-      if (matchedUser) {
-        const { password: _, ...userWithoutPassword } = matchedUser;
-        setUser(userWithoutPassword as User);
-        localStorage.setItem('dna_user', JSON.stringify(userWithoutPassword));
-        toast({
-          title: 'Login Successful',
-          description: `Welcome, ${userWithoutPassword.name || userWithoutPassword.email}!`,
-        });
-      } else {
+      if (error) {
         toast({
           title: 'Login Failed',
-          description: 'Invalid email, password, or role. Please try again.',
+          description: error.message,
           variant: 'destructive',
         });
-        throw new Error('Invalid credentials or role');
+        throw error;
+      }
+      
+      // Verify user role matches the requested role
+      if (data.user) {
+        const userProfile = await fetchUserProfile(data.user.id);
+        
+        if (!userProfile || userProfile.role !== role) {
+          await supabase.auth.signOut();
+          toast({
+            title: 'Login Failed',
+            description: 'You do not have permission for this role.',
+            variant: 'destructive',
+          });
+          throw new Error('Invalid role for this user');
+        }
+        
+        // Set user with role
+        setUser({
+          id: data.user.id,
+          email: data.user.email || '',
+          role: userProfile.role,
+          name: userProfile.full_name || '',
+        });
+        
+        toast({
+          title: 'Login Successful',
+          description: `Welcome${userProfile.full_name ? ', ' + userProfile.full_name : ''}!`,
+        });
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -87,9 +136,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('dna_user');
     toast({
       title: 'Logged Out',
       description: 'You have been successfully logged out.',

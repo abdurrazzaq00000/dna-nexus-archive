@@ -1,20 +1,68 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Activity, Beaker, Database, Users } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import SampleChart from "@/components/dashboard/SampleChart";
-import { mockLabs, mockManagers, mockSamples, mockSampleStats, generateMonthlyData } from "@/services/mockData";
+import { fetchUsersByRole } from "@/services/userService";
+import { fetchLabs } from "@/services/labService";
+import { getSampleStats } from "@/services/sampleService";
+import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { generateMonthlyData } from "@/services/mockData";
 
 const AdminDashboard: React.FC = () => {
-  const monthlyData = generateMonthlyData();
+  const { toast } = useToast();
+  const monthlyData = generateMonthlyData(); // We'll keep this for now and replace later with real data
+
+  const { data: labs } = useQuery({
+    queryKey: ['labs'],
+    queryFn: fetchLabs,
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to fetch labs data",
+        variant: "destructive",
+      });
+      console.error("Error fetching labs:", error);
+    }
+  });
+
+  const { data: managers } = useQuery({
+    queryKey: ['managers'],
+    queryFn: () => fetchUsersByRole('manager'),
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to fetch managers data",
+        variant: "destructive",
+      });
+      console.error("Error fetching managers:", error);
+    }
+  });
+
+  const { data: sampleStats } = useQuery({
+    queryKey: ['sampleStats'],
+    queryFn: getSampleStats,
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to fetch sample statistics",
+        variant: "destructive",
+      });
+      console.error("Error fetching sample stats:", error);
+    }
+  });
   
-  const statusData = [
-    { name: 'New', value: mockSampleStats.new },
-    { name: 'In Transit', value: mockSampleStats.inTransit },
-    { name: 'Stored', value: mockSampleStats.stored },
-    { name: 'Processed', value: mockSampleStats.processed },
-    { name: 'Archived', value: mockSampleStats.archived },
-  ];
+  // Prepare data for status chart
+  const statusData = sampleStats 
+    ? [
+        { name: 'New', value: sampleStats.new },
+        { name: 'In Transit', value: sampleStats.inTransit },
+        { name: 'Stored', value: sampleStats.stored },
+        { name: 'Processed', value: sampleStats.processed },
+        { name: 'Archived', value: sampleStats.archived },
+      ]
+    : [];
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -28,29 +76,27 @@ const AdminDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
           title="Total Samples" 
-          value={mockSampleStats.total} 
+          value={sampleStats?.total || 0} 
           icon={<Database className="w-4 h-4" />} 
           description="Total samples in the system"
-          trend={{ value: 12, isPositive: true }} 
         />
         <StatCard 
           title="Active Labs" 
-          value={mockLabs.filter(lab => lab.active).length} 
+          value={labs?.filter(lab => lab.active)?.length || 0} 
           icon={<Beaker className="w-4 h-4" />} 
           description="Labs currently active" 
         />
         <StatCard 
           title="Sample Managers" 
-          value={mockManagers.length} 
+          value={managers?.length || 0} 
           icon={<Users className="w-4 h-4" />} 
           description="Registered sample managers"
         />
         <StatCard 
           title="Recent Activity" 
-          value={35} 
+          value={"Coming soon"} 
           icon={<Activity className="w-4 h-4" />} 
-          description="Events in the last 24 hours"
-          trend={{ value: 8, isPositive: true }}
+          description="Recent activity tracking"
         />
       </div>
       
