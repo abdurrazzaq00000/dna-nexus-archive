@@ -1,24 +1,29 @@
 
+import { Database } from '@/integrations/supabase/types';
+
+type SampleStatus = Database["public"]["Enums"]["sample_status"];
+
 export interface Sample {
   id: string;
-  sampleId: string;
-  patientName: string;
-  age: number;
-  gender: 'Male' | 'Female' | 'Other';
-  collectedBy: string;
-  status: 'New' | 'In Transit' | 'Stored' | 'Processed' | 'Archived';
-  createdAt: Date;
-  history: SampleHistory[];
-  qrCodeUrl?: string;
-  notes?: string;
+  sample_id: string;
+  patient_name: string;
+  age?: number;
+  gender?: 'Male' | 'Female' | 'Other';
+  collected_by?: string;
+  status: SampleStatus;
+  created_at?: string;
+  lab_id?: string;
+  qr_code_url?: string;
+  history?: SampleHistory[];
 }
 
 export interface SampleHistory {
   id: string;
-  status: string;
-  note: string;
-  date: Date;
-  updatedBy?: string;
+  status: SampleStatus;
+  note?: string;
+  created_at?: string;
+  created_by?: string;
+  sample_id?: string;
 }
 
 export interface User {
@@ -27,7 +32,7 @@ export interface User {
   email: string;
   role: 'admin' | 'lab' | 'manager';
   active: boolean;
-  createdAt: Date;
+  created_at: Date;
 }
 
 export interface Lab extends User {

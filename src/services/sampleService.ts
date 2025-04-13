@@ -1,6 +1,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Sample, SampleHistory } from "@/types/sample";
+import { Sample, SampleHistory, SampleStats } from "@/types/sample";
+import { Database } from "@/integrations/supabase/types";
+
+type SampleStatus = Database["public"]["Enums"]["sample_status"];
 
 export async function fetchSamples() {
   const { data, error } = await supabase
@@ -26,7 +29,7 @@ export async function fetchSampleById(id: string) {
   return data;
 }
 
-export async function fetchSamplesByStatus(status: string) {
+export async function fetchSamplesByStatus(status: SampleStatus) {
   const { data, error } = await supabase
     .from('samples')
     .select('*')
@@ -48,7 +51,16 @@ export async function fetchSamplesByLab(labId: string) {
   return data;
 }
 
-export async function createSample(sampleData: Omit<Sample, 'id' | 'createdAt' | 'history'>) {
+export async function createSample(sampleData: {
+  patient_name: string;
+  sample_id: string;
+  age?: number;
+  gender?: string;
+  collected_by?: string;
+  lab_id?: string;
+  status?: SampleStatus;
+  qr_code_url?: string;
+}) {
   const { data, error } = await supabase
     .from('samples')
     .insert([sampleData])
@@ -59,7 +71,7 @@ export async function createSample(sampleData: Omit<Sample, 'id' | 'createdAt' |
   return data;
 }
 
-export async function updateSampleStatus(sampleId: string, status: string, note: string, updatedBy: string) {
+export async function updateSampleStatus(sampleId: string, status: SampleStatus, note: string, updatedBy: string) {
   // First update the sample status
   const { error: sampleError } = await supabase
     .from('samples')
@@ -86,9 +98,9 @@ export async function updateSampleStatus(sampleId: string, status: string, note:
   return data;
 }
 
-export async function getSampleStats() {
+export async function getSampleStats(): Promise<SampleStats> {
   // Get sample counts by status
-  const statuses = ['New', 'In Transit', 'Stored', 'Processed', 'Archived'];
+  const statuses: SampleStatus[] = ['new', 'in_transit', 'stored', 'processed', 'archived'];
   const counts = await Promise.all(statuses.map(async (status) => {
     const { count, error } = await supabase
       .from('samples')
@@ -104,10 +116,10 @@ export async function getSampleStats() {
   
   return {
     total,
-    new: counts.find(c => c.status === 'New')?.count || 0,
-    inTransit: counts.find(c => c.status === 'In Transit')?.count || 0,
-    stored: counts.find(c => c.status === 'Stored')?.count || 0,
-    processed: counts.find(c => c.status === 'Processed')?.count || 0,
-    archived: counts.find(c => c.status === 'Archived')?.count || 0
+    new: counts.find(c => c.status === 'new')?.count || 0,
+    inTransit: counts.find(c => c.status === 'in_transit')?.count || 0,
+    stored: counts.find(c => c.status === 'stored')?.count || 0,
+    processed: counts.find(c => c.status === 'processed')?.count || 0,
+    archived: counts.find(c => c.status === 'archived')?.count || 0
   };
 }
