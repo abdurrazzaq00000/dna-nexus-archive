@@ -94,8 +94,8 @@ const SamplesList: React.FC = () => {
             </div>
             <Select 
               value={statusFilter} 
-              onValueChange={(value) => {
-                setStatusFilter(value as any);
+              onValueChange={(value: any) => {
+                setStatusFilter(value);
                 setCurrentPage(1); // Reset to first page on filter change
               }}
             >

@@ -12,8 +12,10 @@ import { ChevronLeft, Clock, Edit, Save } from "lucide-react";
 import QRGenerator from "@/components/qr/QRGenerator";
 import { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/context/AuthContext";
+import { Sample, SampleHistory } from "@/types/sample";
 
 type SampleStatus = Database["public"]["Enums"]["sample_status"];
+type FetchedSample = Sample & { sample_history?: SampleHistory[] };
 
 const SampleDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,7 +28,7 @@ const SampleDetails: React.FC = () => {
   const [note, setNote] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   
-  const { data: sample, isLoading: sampleLoading, error } = useQuery({
+  const { data: sampleData, isLoading: sampleLoading, error } = useQuery({
     queryKey: ['sample', id],
     queryFn: () => id ? fetchSampleById(id) : null,
     enabled: !!id,
@@ -41,6 +43,12 @@ const SampleDetails: React.FC = () => {
       },
     },
   });
+
+  // Create a properly typed sample from the fetched data
+  const sample: Sample | null = sampleData ? {
+    ...sampleData,
+    sample_history: sampleData.sample_history || []
+  } : null;
 
   const updateStatusMutation = useMutation({
     mutationFn: async () => {
@@ -164,8 +172,8 @@ const SampleDetails: React.FC = () => {
                 <div>
                   <h3 className="font-medium text-sm text-muted-foreground mb-1">Sample History</h3>
                   <div className="space-y-3 mt-2">
-                    {sample.history && sample.history.length > 0 ? (
-                      sample.history.map((entry) => (
+                    {sample.sample_history && sample.sample_history.length > 0 ? (
+                      sample.sample_history.map((entry) => (
                         <div key={entry.id} className="border-l-2 border-muted pl-4 py-1">
                           <div className="flex justify-between">
                             <span className="font-medium text-sm">{entry.status}</span>
@@ -189,7 +197,10 @@ const SampleDetails: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="text-sm font-medium mb-1 block">Status</label>
-                        <Select value={status} onValueChange={setStatus}>
+                        <Select 
+                          value={status} 
+                          onValueChange={(value: SampleStatus) => setStatus(value)}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select new status" />
                           </SelectTrigger>

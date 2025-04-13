@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchLabById } from "@/services/labService";
 import { fetchSamples } from "@/services/sampleService";
 import { useToast } from "@/hooks/use-toast";
-import { Lab } from "@/services/labService";
+import { Lab } from "@/types/sample";
 
 const LabDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -60,8 +60,9 @@ const LabDashboard: React.FC = () => {
     .slice(0, 5)
     .sort((a, b) => new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime());
 
-  // Get lab info
+  // Get lab info with samplesCollected property
   const displayLabInfo = labInfo || mockLabs.find(lab => lab.email === user?.email) || mockLabs[0];
+  const samplesCount = displayLabInfo.samplesCollected || 0;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -78,7 +79,7 @@ const LabDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard 
           title="Total Samples Collected" 
-          value={displayLabInfo.samplesCollected || 0} 
+          value={samplesCount} 
           icon={<TestTube className="w-4 h-4" />} 
           description="All time"
           trend={{ value: 5, isPositive: true }}

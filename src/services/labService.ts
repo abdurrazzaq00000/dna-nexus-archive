@@ -1,15 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@/types/auth";
-
-export interface Lab {
-  id: string;
-  name: string;
-  location?: string;
-  active: boolean;
-  created_at: string;
-  created_by?: string;
-}
+import { Lab } from "@/types/sample";
 
 export async function fetchLabs() {
   const { data, error } = await supabase
@@ -40,10 +31,27 @@ export async function fetchLabById(id: string) {
     .single();
   
   if (error) throw error;
-  return data as Lab;
+  
+  // Add samples count (can be enhanced to get real count from samples table)
+  const labWithSamplesCount = {
+    ...data,
+    samplesCollected: 0 // Default value
+  } as Lab;
+  
+  // Get count of samples collected by this lab
+  const { count, error: samplesError } = await supabase
+    .from('samples')
+    .select('*', { count: 'exact', head: true })
+    .eq('lab_id', id);
+    
+  if (!samplesError && count !== null) {
+    labWithSamplesCount.samplesCollected = count;
+  }
+  
+  return labWithSamplesCount;
 }
 
-export async function createLab(labData: Omit<Lab, 'id' | 'created_at'>) {
+export async function createLab(labData: Omit<Lab, 'id' | 'created_at' | 'samplesCollected'>) {
   const { data, error } = await supabase
     .from('labs')
     .insert([labData])

@@ -18,7 +18,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({
   const qrValue = JSON.stringify({
     id: sample.id,
     sample_id: sample.sample_id,
-    patientName: sample.patient_name,
+    patient_name: sample.patient_name,
   });
   
   return (
