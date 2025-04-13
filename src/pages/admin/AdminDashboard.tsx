@@ -18,9 +18,11 @@ const AdminDashboard = () => {
   const { data: labs, isLoading: labsLoading } = useQuery({
     queryKey: ['labs'],
     queryFn: fetchLabs,
-    onError: (error) => {
-      console.error('Error fetching labs:', error);
-      toast({ title: 'Error', description: 'Failed to load labs data', variant: 'destructive' });
+    meta: {
+      onError: (error: any) => {
+        console.error('Error fetching labs:', error);
+        toast({ title: 'Error', description: 'Failed to load labs data', variant: 'destructive' });
+      },
     },
   });
 
@@ -28,9 +30,11 @@ const AdminDashboard = () => {
   const { data: labTechnicians, isLoading: techsLoading } = useQuery({
     queryKey: ['labTechnicians'],
     queryFn: () => fetchActiveUsersByRole('lab'),
-    onError: (error) => {
-      console.error('Error fetching lab technicians:', error);
-      toast({ title: 'Error', description: 'Failed to load lab technicians data', variant: 'destructive' });
+    meta: {
+      onError: (error: any) => {
+        console.error('Error fetching lab technicians:', error);
+        toast({ title: 'Error', description: 'Failed to load lab technicians data', variant: 'destructive' });
+      },
     },
   });
 
@@ -38,9 +42,11 @@ const AdminDashboard = () => {
   const { data: sampleStats, isLoading: statsLoading } = useQuery({
     queryKey: ['sampleStats'],
     queryFn: getSampleStats,
-    onError: (error) => {
-      console.error('Error fetching sample statistics:', error);
-      toast({ title: 'Error', description: 'Failed to load sample statistics', variant: 'destructive' });
+    meta: {
+      onError: (error: any) => {
+        console.error('Error fetching sample statistics:', error);
+        toast({ title: 'Error', description: 'Failed to load sample statistics', variant: 'destructive' });
+      },
     },
   });
 
@@ -92,8 +98,7 @@ const AdminDashboard = () => {
             />
             <StatCard 
               title="Processing Rate" 
-              value={sampleStats ? Math.round((sampleStats.processed / (sampleStats.total || 1)) * 100) : 0} 
-              suffix="%" 
+              value={sampleStats ? Math.round((sampleStats.processed / (sampleStats.total || 1)) * 100) : 0}
               description="Sample processing rate" 
               trend={{ value: 5, isPositive: true }}
             />
@@ -105,7 +110,13 @@ const AdminDashboard = () => {
                 <CardTitle>Sample Status Distribution</CardTitle>
               </CardHeader>
               <CardContent className="pl-2">
-                <SampleChart data={chartData} />
+                <SampleChart 
+                  data={chartData} 
+                  title="Sample Distribution"
+                  type="pie"
+                  xKey="name"
+                  yKey="value"
+                />
               </CardContent>
             </Card>
             

@@ -1,5 +1,6 @@
 
 import React from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { Card } from "@/components/ui/card";
 import { Sample } from "@/types/sample";
 
@@ -16,17 +17,21 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({
 }) => {
   const qrValue = JSON.stringify({
     id: sample.id,
-    sampleId: sample.sample_id,
+    sample_id: sample.sample_id,
     patientName: sample.patient_name,
   });
   
   return (
     <Card className="overflow-hidden bg-white p-4 flex flex-col items-center">
-      {/* In a real implementation, we'd use a QR code library */}
-      <div className="w-32 h-32 bg-gray-200 flex items-center justify-center text-xs text-center p-2 border border-gray-300">
-        QR Code for {sample.sample_id}
-        <br />
-        (Actual QR would be generated here)
+      <div className="bg-white p-2 border border-gray-200 rounded">
+        <QRCodeSVG 
+          value={qrValue} 
+          size={size} 
+          level="H" 
+          includeMargin={true}
+          bgColor={"#ffffff"}
+          fgColor={"#000000"}
+        />
       </div>
       
       {includeDetails && (

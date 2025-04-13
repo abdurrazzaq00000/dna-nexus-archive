@@ -8,18 +8,60 @@ import StatCard from "@/components/dashboard/StatCard";
 import { Plus, ChevronRight, ClipboardList, ArrowUpRight, TestTube } from "lucide-react";
 import { mockLabs, mockSamples, mockSampleStats, generateMonthlyData } from "@/services/mockData";
 import { useAuth } from "@/context/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { fetchLabById } from "@/services/labService";
+import { fetchSamples } from "@/services/sampleService";
+import { useToast } from "@/hooks/use-toast";
+import { Lab } from "@/services/labService";
 
 const LabDashboard: React.FC = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const monthlyData = generateMonthlyData();
   
+  // Fetch lab info if user is logged in
+  const { data: labInfo } = useQuery({
+    queryKey: ['lab', user?.id],
+    queryFn: () => user?.id ? fetchLabById(user.id) : null,
+    enabled: !!user?.id,
+    meta: {
+      onError: (error: any) => {
+        console.error('Error fetching lab info:', error);
+        toast({ 
+          title: 'Error', 
+          description: 'Failed to load lab information', 
+          variant: 'destructive' 
+        });
+      },
+    },
+  });
+  
+  // Fetch samples
+  const { data: samples, isLoading: samplesLoading } = useQuery({
+    queryKey: ['samples'],
+    queryFn: fetchSamples,
+    meta: {
+      onError: (error: any) => {
+        console.error('Error fetching samples:', error);
+        toast({ 
+          title: 'Error', 
+          description: 'Failed to load samples', 
+          variant: 'destructive' 
+        });
+      },
+    },
+  });
+
+  // Use mock data as fallback
+  const displaySamples = samples || mockSamples;
+  
   // Mock data for recent samples
-  const recentSamples = mockSamples
+  const recentSamples = displaySamples
     .slice(0, 5)
     .sort((a, b) => new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime());
 
   // Get lab info
-  const labInfo = mockLabs.find(lab => lab.email === user?.email) || mockLabs[0];
+  const displayLabInfo = labInfo || mockLabs.find(lab => lab.email === user?.email) || mockLabs[0];
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -36,20 +78,20 @@ const LabDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard 
           title="Total Samples Collected" 
-          value={labInfo.samplesCollected} 
+          value={displayLabInfo.samplesCollected || 0} 
           icon={<TestTube className="w-4 h-4" />} 
           description="All time"
           trend={{ value: 5, isPositive: true }}
         />
         <StatCard 
           title="New Samples" 
-          value={mockSampleStats.new} 
+          value={displaySamples.filter(s => s.status === 'new').length} 
           icon={<Plus className="w-4 h-4" />} 
           description="Awaiting processing" 
         />
         <StatCard 
           title="In Transit" 
-          value={mockSampleStats.inTransit} 
+          value={displaySamples.filter(s => s.status === 'in_transit').length} 
           icon={<ArrowUpRight className="w-4 h-4" />} 
           description="Currently in transit"
         />

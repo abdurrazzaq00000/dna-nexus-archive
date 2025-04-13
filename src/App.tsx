@@ -17,9 +17,13 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 
 // Lab Pages
 import LabDashboard from "@/pages/lab/LabDashboard";
+import NewSample from "@/pages/lab/NewSample";
+import SamplesList from "@/pages/lab/SamplesList";
 
 // Manager Pages
 import ManagerDashboard from "@/pages/manager/ManagerDashboard";
+import ScanQR from "@/pages/manager/ScanQR";
+import SampleDetails from "@/pages/manager/SampleDetails";
 
 const queryClient = new QueryClient();
 
@@ -45,13 +49,17 @@ const App = () => (
               {/* Lab Routes */}
               <Route path="/lab" element={<MainLayout requiredRole="lab" />}>
                 <Route path="dashboard" element={<LabDashboard />} />
-                {/* More lab routes will go here */}
+                <Route path="samples" element={<SamplesList />} />
+                <Route path="samples/new" element={<NewSample />} />
+                <Route path="samples/:id" element={<SampleDetails />} />
                 <Route index element={<Navigate to="dashboard" replace />} />
               </Route>
               
               {/* Manager Routes */}
               <Route path="/manager" element={<MainLayout requiredRole="manager" />}>
                 <Route path="dashboard" element={<ManagerDashboard />} />
+                <Route path="scan" element={<ScanQR />} />
+                <Route path="samples/:id" element={<SampleDetails />} />
                 {/* More manager routes will go here */}
                 <Route index element={<Navigate to="dashboard" replace />} />
               </Route>
