@@ -18,11 +18,9 @@ const AdminDashboard = () => {
   const { data: labs, isLoading: labsLoading } = useQuery({
     queryKey: ['labs'],
     queryFn: fetchLabs,
-    onSettled: (data, error) => {
-      if (error) {
-        console.error('Error fetching labs:', error);
-        toast({ title: 'Error', description: 'Failed to load labs data', variant: 'destructive' });
-      }
+    onError: (error) => {
+      console.error('Error fetching labs:', error);
+      toast({ title: 'Error', description: 'Failed to load labs data', variant: 'destructive' });
     },
   });
 
@@ -30,11 +28,9 @@ const AdminDashboard = () => {
   const { data: labTechnicians, isLoading: techsLoading } = useQuery({
     queryKey: ['labTechnicians'],
     queryFn: () => fetchActiveUsersByRole('lab'),
-    onSettled: (data, error) => {
-      if (error) {
-        console.error('Error fetching lab technicians:', error);
-        toast({ title: 'Error', description: 'Failed to load lab technicians data', variant: 'destructive' });
-      }
+    onError: (error) => {
+      console.error('Error fetching lab technicians:', error);
+      toast({ title: 'Error', description: 'Failed to load lab technicians data', variant: 'destructive' });
     },
   });
 
@@ -42,15 +38,22 @@ const AdminDashboard = () => {
   const { data: sampleStats, isLoading: statsLoading } = useQuery({
     queryKey: ['sampleStats'],
     queryFn: getSampleStats,
-    onSettled: (data, error) => {
-      if (error) {
-        console.error('Error fetching sample statistics:', error);
-        toast({ title: 'Error', description: 'Failed to load sample statistics', variant: 'destructive' });
-      }
+    onError: (error) => {
+      console.error('Error fetching sample statistics:', error);
+      toast({ title: 'Error', description: 'Failed to load sample statistics', variant: 'destructive' });
     },
   });
 
   const isLoading = labsLoading || techsLoading || statsLoading;
+
+  // Transform sampleStats to an array format compatible with SampleChart
+  const chartData = sampleStats ? [
+    { name: 'New', value: sampleStats.new },
+    { name: 'In Transit', value: sampleStats.inTransit },
+    { name: 'Stored', value: sampleStats.stored },
+    { name: 'Processed', value: sampleStats.processed },
+    { name: 'Archived', value: sampleStats.archived }
+  ] : [];
 
   return (
     <div className="space-y-6">
@@ -75,8 +78,7 @@ const AdminDashboard = () => {
               title="Total Samples" 
               value={sampleStats?.total || 0} 
               description="All collected samples" 
-              trend="up"
-              trendValue="12%"
+              trend={{ value: 12, isPositive: true }}
             />
             <StatCard 
               title="Active Labs" 
@@ -93,7 +95,7 @@ const AdminDashboard = () => {
               value={sampleStats ? Math.round((sampleStats.processed / (sampleStats.total || 1)) * 100) : 0} 
               suffix="%" 
               description="Sample processing rate" 
-              trend={sampleStats && sampleStats.processed > 0 ? "up" : "neutral"}
+              trend={{ value: 5, isPositive: true }}
             />
           </div>
 
@@ -103,13 +105,7 @@ const AdminDashboard = () => {
                 <CardTitle>Sample Status Distribution</CardTitle>
               </CardHeader>
               <CardContent className="pl-2">
-                <SampleChart data={sampleStats || {
-                  new: 0,
-                  inTransit: 0,
-                  stored: 0,
-                  processed: 0,
-                  archived: 0
-                }} />
+                <SampleChart data={chartData} />
               </CardContent>
             </Card>
             

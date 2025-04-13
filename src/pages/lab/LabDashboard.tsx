@@ -16,7 +16,7 @@ const LabDashboard: React.FC = () => {
   // Mock data for recent samples
   const recentSamples = mockSamples
     .slice(0, 5)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    .sort((a, b) => new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime());
 
   // Get lab info
   const labInfo = mockLabs.find(lab => lab.email === user?.email) || mockLabs[0];
@@ -88,15 +88,15 @@ const LabDashboard: React.FC = () => {
               {recentSamples.map((sample) => (
                 <div key={sample.id} className="flex items-center justify-between">
                   <div>
-                    <div className="font-medium">{sample.sampleId}</div>
+                    <div className="font-medium">{sample.sample_id}</div>
                     <div className="text-sm text-muted-foreground">
-                      {sample.patientName} • {new Date(sample.createdAt).toLocaleDateString()}
+                      {sample.patient_name} • {new Date(sample.created_at || "").toLocaleDateString()}
                     </div>
                   </div>
                   <div className={`text-xs font-medium px-2 py-1 rounded-full ${
-                    sample.status === 'New' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
-                    sample.status === 'In Transit' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300' :
-                    sample.status === 'Stored' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                    sample.status === 'new' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                    sample.status === 'in_transit' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300' :
+                    sample.status === 'stored' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
                     'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
                   }`}>
                     {sample.status}

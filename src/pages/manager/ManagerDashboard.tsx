@@ -20,13 +20,13 @@ const ManagerDashboard: React.FC = () => {
   
   // Get samples that need attention (new or in transit)
   const needAttention = mockSamples.filter(
-    sample => sample.status === 'New' || sample.status === 'In Transit'
+    sample => sample.status === 'new' || sample.status === 'in_transit'
   ).length;
   
   // Recent samples for the list
   const recentSamples = mockSamples
-    .filter(sample => sample.status === 'Stored')
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .filter(sample => sample.status === 'stored')
+    .sort((a, b) => new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime())
     .slice(0, 5);
 
   return (
@@ -92,9 +92,9 @@ const ManagerDashboard: React.FC = () => {
               {recentSamples.map((sample) => (
                 <div key={sample.id} className="flex items-center justify-between">
                   <div>
-                    <div className="font-medium">{sample.sampleId}</div>
+                    <div className="font-medium">{sample.sample_id}</div>
                     <div className="text-xs text-muted-foreground">
-                      {new Date(sample.createdAt).toLocaleDateString()}
+                      {new Date(sample.created_at || "").toLocaleDateString()}
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" asChild>

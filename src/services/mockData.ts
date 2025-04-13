@@ -29,7 +29,7 @@ export const mockLabs: Lab[] = [
     email: 'central@dna-nexus.com',
     role: 'lab',
     active: true,
-    createdAt: new Date('2023-01-15'),
+    created_at: new Date('2023-01-15'),
     samplesCollected: 124
   },
   {
@@ -38,7 +38,7 @@ export const mockLabs: Lab[] = [
     email: 'biotech@dna-nexus.com',
     role: 'lab',
     active: true,
-    createdAt: new Date('2023-03-22'),
+    created_at: new Date('2023-03-22'),
     samplesCollected: 89
   },
   {
@@ -47,7 +47,7 @@ export const mockLabs: Lab[] = [
     email: 'genome@dna-nexus.com',
     role: 'lab',
     active: false,
-    createdAt: new Date('2023-02-10'),
+    created_at: new Date('2023-02-10'),
     samplesCollected: 45
   }
 ];
@@ -60,7 +60,7 @@ export const mockManagers: User[] = [
     email: 'jane@dna-nexus.com',
     role: 'manager',
     active: true,
-    createdAt: new Date('2023-01-20')
+    created_at: new Date('2023-01-20')
   },
   {
     id: '2',
@@ -68,7 +68,7 @@ export const mockManagers: User[] = [
     email: 'robert@dna-nexus.com',
     role: 'manager',
     active: true,
-    createdAt: new Date('2023-04-05')
+    created_at: new Date('2023-04-05')
   },
   {
     id: '3',
@@ -76,12 +76,13 @@ export const mockManagers: User[] = [
     email: 'emily@dna-nexus.com',
     role: 'manager',
     active: false,
-    createdAt: new Date('2023-02-15')
+    created_at: new Date('2023-02-15')
   }
 ];
 
-// List of statuses
-export const sampleStatuses = ['New', 'In Transit', 'Stored', 'Processed', 'Archived'];
+// List of statuses (using the proper enum values from Supabase)
+export const sampleStatuses: Array<"new" | "in_transit" | "stored" | "processed" | "archived"> = 
+  ['new', 'in_transit', 'stored', 'processed', 'archived'];
 
 // Generate mock samples
 export const generateMockSamples = (count: number): Sample[] => {
@@ -91,73 +92,72 @@ export const generateMockSamples = (count: number): Sample[] => {
   const labIds = mockLabs.map(lab => lab.id);
   
   for (let i = 0; i < count; i++) {
-    const createdAt = randomDate();
-    const status = sampleStatuses[Math.floor(Math.random() * sampleStatuses.length)] as 'New' | 'In Transit' | 'Stored' | 'Processed' | 'Archived';
+    const createdDate = randomDate();
+    const status = sampleStatuses[Math.floor(Math.random() * sampleStatuses.length)];
     const sampleId = generateSampleId();
     
     const sample: Sample = {
       id: `sample-${i + 1}`,
-      sampleId,
-      patientName: `Patient ${i + 1}`,
+      sample_id: sampleId,
+      patient_name: `Patient ${i + 1}`,
       age: 20 + Math.floor(Math.random() * 60),
       gender: genders[Math.floor(Math.random() * genders.length)] as 'Male' | 'Female' | 'Other',
-      collectedBy: labIds[Math.floor(Math.random() * labIds.length)],
+      collected_by: labIds[Math.floor(Math.random() * labIds.length)],
       status,
-      createdAt,
+      created_at: createdDate.toISOString(),
       history: [
         {
           id: `history-${i}-1`,
-          status: 'New',
+          status: 'new',
           note: 'Sample collected',
-          date: createdAt,
+          created_at: createdDate.toISOString(),
         }
-      ],
-      notes: Math.random() > 0.7 ? 'Additional notes about this sample' : undefined,
+      ]
     };
     
     // Add more history if not new
-    if (status !== 'New') {
-      const transitDate = new Date(createdAt);
+    if (status !== 'new') {
+      const transitDate = new Date(createdDate);
       transitDate.setHours(transitDate.getHours() + Math.random() * 48);
       
       sample.history.push({
         id: `history-${i}-2`,
-        status: 'In Transit',
+        status: 'in_transit',
         note: 'Sample in transit to storage',
-        date: transitDate,
+        created_at: transitDate.toISOString(),
       });
       
-      if (status !== 'In Transit') {
+      if (status !== 'in_transit') {
         const storedDate = new Date(transitDate);
         storedDate.setHours(storedDate.getHours() + Math.random() * 24);
         
         sample.history.push({
           id: `history-${i}-3`,
-          status: 'Stored',
+          status: 'stored',
           note: 'Sample stored in repository',
-          date: storedDate,
+          created_at: storedDate.toISOString(),
         });
         
-        if (status === 'Processed' || status === 'Archived') {
+        if (status === 'processed' || status === 'archived') {
           const processedDate = new Date(storedDate);
           processedDate.setHours(processedDate.getHours() + Math.random() * 72);
           
           sample.history.push({
             id: `history-${i}-4`,
-            status: 'Processed',
+            status: 'processed',
             note: 'Sample analysis complete',
-            date: processedDate,
+            created_at: processedDate.toISOString(),
           });
           
-          if (status === 'Archived') {
+          if (status === 'archived') {
             const archivedDate = new Date(processedDate);
             archivedDate.setHours(archivedDate.getHours() + Math.random() * 72);
             
             sample.history.push({
               id: `history-${i}-5`,
-              status: 'Archived',
+              status: 'archived',
               note: 'Sample archived',
-              date: archivedDate,
+              created_at: archivedDate.toISOString(),
             });
           }
         }
@@ -174,11 +174,11 @@ export const generateMockSamples = (count: number): Sample[] => {
 export const generateMockStats = (samples: Sample[]): SampleStats => {
   return {
     total: samples.length,
-    new: samples.filter(s => s.status === 'New').length,
-    inTransit: samples.filter(s => s.status === 'In Transit').length,
-    stored: samples.filter(s => s.status === 'Stored').length,
-    processed: samples.filter(s => s.status === 'Processed').length,
-    archived: samples.filter(s => s.status === 'Archived').length,
+    new: samples.filter(s => s.status === 'new').length,
+    inTransit: samples.filter(s => s.status === 'in_transit').length,
+    stored: samples.filter(s => s.status === 'stored').length,
+    processed: samples.filter(s => s.status === 'processed').length,
+    archived: samples.filter(s => s.status === 'archived').length,
   };
 };
 
